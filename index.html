@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f3ed" />
     <title>Учёт трат</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -20,6 +17,10 @@
         </div>
         <div class="hero-mark" aria-hidden="true">₸</div>
       </header>
+
+      <figure class="money-banner">
+        <img src="assets/20000-tenge.png" alt="Банкнота 20 000 тенге" />
+      </figure>
 
       <section class="expense-form-card" aria-labelledby="form-title">
         <div class="section-heading">
@@ -35,20 +36,25 @@
             <label class="field">
               <span>Сумма</span>
               <span class="input-with-suffix">
-                <input id="amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0" required />
+                <input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="0" aria-describedby="amount-error" required />
                 <span>₸</span>
               </span>
+              <small id="amount-error" class="field-error" role="alert"></small>
             </label>
 
             <label class="field">
               <span>Категория</span>
-              <select id="category" name="category" required>
-                <option value="Еда">Еда</option>
-                <option value="Транспорт">Транспорт</option>
-                <option value="Дом">Дом</option>
-                <option value="Расходы на кредит">Расходы на кредит</option>
-                <option value="Другое">Другое</option>
-              </select>
+              <span class="category-control">
+                <select id="category" name="category" required>
+                  <option value="Еда">Еда</option>
+                  <option value="Транспорт">Транспорт</option>
+                  <option value="Дом">Дом</option>
+                  <option value="Другое">Другое</option>
+                </select>
+                <input id="custom-category" type="text" maxlength="40" placeholder="Название категории" aria-describedby="category-error" hidden />
+                <button id="toggle-category" type="button" aria-label="Ввести свою категорию" aria-pressed="false">+</button>
+              </span>
+              <small id="category-error" class="field-error" role="alert"></small>
             </label>
 
             <label class="field">
@@ -77,10 +83,65 @@
               <p>Новые записи отображаются первыми</p>
             </div>
           </div>
-          <div class="monthly-total">
-            <span>За текущий месяц</span>
-            <strong id="monthly-total">0 ₸</strong>
+          <div class="header-totals">
+            <div class="selected-total">
+              <span>ИТОГ</span>
+              <strong id="selected-total">0 ₸</strong>
+            </div>
+            <div class="monthly-total">
+              <span>За текущий месяц</span>
+              <strong id="monthly-total">0 ₸</strong>
+            </div>
           </div>
+        </div>
+
+        <div class="category-totals" aria-label="Итоги по категориям за текущий месяц">
+          <div class="category-total">
+            <span>Еда</span>
+            <strong data-category-total="Еда">0 ₸</strong>
+          </div>
+          <div class="category-total">
+            <span>Транспорт</span>
+            <strong data-category-total="Транспорт">0 ₸</strong>
+          </div>
+          <div class="category-total">
+            <span>Дом</span>
+            <strong data-category-total="Дом">0 ₸</strong>
+          </div>
+          <div class="category-total">
+            <span>Другое</span>
+            <strong data-category-total="Другое">0 ₸</strong>
+          </div>
+        </div>
+
+        <div class="period-filter" aria-label="Показать траты за период">
+          <span>Период</span>
+          <div class="period-buttons">
+            <button type="button" data-period="1">Сутки</button>
+            <button type="button" data-period="7">7 дней</button>
+            <button type="button" data-period="14">14 дней</button>
+            <button type="button" data-period="month">Месяц</button>
+            <button type="button" data-period="custom">С — По</button>
+            <button type="button" data-period="all" class="is-active" aria-pressed="true">Все</button>
+          </div>
+        </div>
+
+        <div id="custom-period" class="custom-period" hidden>
+          <label>
+            <span>С</span>
+            <input id="period-from" type="date" />
+          </label>
+          <label>
+            <span>По</span>
+            <input id="period-to" type="date" />
+          </label>
+          <small id="period-error" role="alert"></small>
+        </div>
+
+        <div class="report-actions">
+          <button id="download-excel" type="button">Скачать Excel</button>
+          <button id="save-pdf" type="button">Сохранить PDF</button>
+          <small id="report-message" role="status" aria-live="polite"></small>
         </div>
 
         <div id="expense-list" class="expense-list" aria-live="polite"></div>
