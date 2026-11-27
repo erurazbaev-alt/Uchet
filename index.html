@@ -34,6 +34,14 @@
         <form id="expense-form">
           <div class="form-grid">
             <label class="field">
+              <span>Вид записи</span>
+              <select id="entry-type" name="entryType">
+                <option value="expense">Трата</option>
+                <option value="debt">Выбытие (дал в долг)</option>
+              </select>
+            </label>
+
+            <label class="field">
               <span>Сумма</span>
               <span class="input-with-suffix">
                 <input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="0" aria-describedby="amount-error" required />
@@ -42,7 +50,7 @@
               <small id="amount-error" class="field-error" role="alert"></small>
             </label>
 
-            <label class="field">
+            <label id="category-field" class="field">
               <span>Категория</span>
               <span class="category-control">
                 <select id="category" name="category" required>
@@ -52,7 +60,7 @@
                   <option value="Другое">Другое</option>
                 </select>
                 <input id="custom-category" type="text" maxlength="40" placeholder="Название категории" aria-describedby="category-error" hidden />
-                <button id="toggle-category" type="button" aria-label="Ввести свою категорию" aria-pressed="false">+</button>
+                <button id="toggle-category" type="button" aria-label="Ввести свою категорию" aria-pressed="false">Своя категория</button>
               </span>
               <small id="category-error" class="field-error" role="alert"></small>
             </label>
@@ -114,11 +122,33 @@
           </div>
         </div>
 
+        <section class="monthly-report" aria-labelledby="monthly-report-title">
+          <div class="monthly-report-heading">
+            <div>
+              <h3 id="monthly-report-title">Отчёт за месяц</h3>
+              <label class="monthly-report-period">
+                <span>Месяц</span>
+                <input id="monthly-report-month" type="month" />
+              </label>
+            </div>
+            <strong id="monthly-report-total">0 ₸</strong>
+          </div>
+          <div>
+            <h4>Самые затратные категории</h4>
+            <ol id="monthly-report-categories" class="monthly-report-categories"></ol>
+          </div>
+          <p id="monthly-report-comparison" class="monthly-report-comparison"></p>
+          <div class="monthly-report-copy">
+            <button id="copy-monthly-report" type="button">Скопировать отчёт</button>
+            <small id="monthly-report-message" role="status" aria-live="polite"></small>
+          </div>
+        </section>
+
         <div class="period-filter" aria-label="Показать траты за период">
           <span>Период</span>
           <div class="period-buttons">
-            <button type="button" data-period="1">Сутки</button>
-            <button type="button" data-period="7">7 дней</button>
+            <button type="button" data-period="1">День</button>
+            <button type="button" data-period="7">Неделя</button>
             <button type="button" data-period="14">14 дней</button>
             <button type="button" data-period="month">Месяц</button>
             <button type="button" data-period="custom">С — По</button>
