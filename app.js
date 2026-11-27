@@ -1,4 +1,5 @@
 const STORAGE_KEY = "uchet-expenses";
+const HABITS_STORAGE_KEY = "uchet-habits";
 const CATEGORY_ICONS = {
   "Еда": "🍲",
   "Транспорт": "🚕",
@@ -35,8 +36,16 @@ const monthlyReportCategories = document.querySelector("#monthly-report-categori
 const monthlyReportComparison = document.querySelector("#monthly-report-comparison");
 const copyMonthlyReportButton = document.querySelector("#copy-monthly-report");
 const monthlyReportMessage = document.querySelector("#monthly-report-message");
+const habitForm = document.querySelector("#habit-form");
+const habitNameInput = document.querySelector("#habit-name");
+const habitGoalInput = document.querySelector("#habit-goal");
+const habitNameError = document.querySelector("#habit-name-error");
+const habitGoalError = document.querySelector("#habit-goal-error");
+const habitList = document.querySelector("#habit-list");
+const habitTemplate = document.querySelector("#habit-template");
 
 let expenses = loadExpenses();
+let habits = loadHabits();
 let selectedPeriod = "all";
 let isCustomCategory = false;
 let isCustomPeriodValid = false;
@@ -45,6 +54,7 @@ setCustomCategoryMode(false);
 setEntryTypeMode("expense");
 dateInput.value = toLocalDateString(new Date());
 render();
+renderHabits();
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -150,6 +160,61 @@ savePdfButton.addEventListener("click", openPrintableReport);
 copyMonthlyReportButton.addEventListener("click", copyMonthlyReport);
 monthlyReportMonthInput.addEventListener("change", () => renderMonthlyReport(getSelectedReportMonth()));
 
+habitForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = habitNameInput.value.trim();
+  const goal = Number(habitGoalInput.value);
+
+  if (name === "") {
+    showHabitNameError("Введите название привычки");
+    habitNameInput.focus();
+    return;
+  }
+
+  if (!Number.isInteger(goal) || goal < 1 || goal > 7) {
+    showHabitGoalError("Введите цель от 1 до 7");
+    habitGoalInput.focus();
+    return;
+  }
+
+  showHabitNameError("");
+  showHabitGoalError("");
+  habits.push({
+    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    name,
+    goal,
+    markedDates: [],
+  });
+  saveHabits();
+  habitForm.reset();
+  habitNameInput.focus();
+  renderHabits();
+});
+
+habitNameInput.addEventListener("input", () => showHabitNameError(""));
+habitGoalInput.addEventListener("input", () => showHabitGoalError(""));
+habitNameInput.addEventListener("invalid", (event) => {
+  event.preventDefault();
+  showHabitNameError("Введите название привычки");
+});
+habitGoalInput.addEventListener("invalid", (event) => {
+  event.preventDefault();
+  showHabitGoalError("Введите цель от 1 до 7");
+});
+
+habitList.addEventListener("click", (event) => {
+  const markButton = event.target.closest(".habit-mark-button");
+  const deleteButton = event.target.closest(".habit-delete-button");
+
+  if (markButton) {
+    toggleHabitMark(markButton.dataset.id);
+  } else if (deleteButton) {
+    habits = habits.filter((habit) => habit.id !== deleteButton.dataset.id);
+    saveHabits();
+    renderHabits();
+  }
+});
+
 function render() {
   list.replaceChildren();
   showReportMessage("");
@@ -187,6 +252,75 @@ function render() {
   });
 
   renderMonthlyReport(getSelectedReportMonth());
+}
+
+function renderHabits() {
+  habitList.replaceChildren();
+
+  if (!habits.length) {
+    const emptyState = document.createElement("div");
+    emptyState.className = "habit-empty";
+    emptyState.textContent = "Привычек пока нет. Добавьте первую цель на неделю.";
+    habitList.append(emptyState);
+    return;
+  }
+
+  const today = toLocalDateString(new Date());
+  const [weekStart, weekEnd] = getCurrentWeekRange();
+  habits.forEach((habit) => {
+    const item = habitTemplate.content.firstElementChild.cloneNode(true);
+    const weeklyMarks = habit.markedDates.filter((date) => date >= weekStart && date <= weekEnd).length;
+    const isMarkedToday = habit.markedDates.includes(today);
+    const isComplete = weeklyMarks >= habit.goal;
+    const status = item.querySelector(".habit-status");
+    const markButton = item.querySelector(".habit-mark-button");
+
+    item.querySelector(".habit-name").textContent = habit.name;
+    item.querySelector(".habit-progress").textContent = `${weeklyMarks} из ${habit.goal}`;
+    status.textContent = isComplete ? "Цель выполнена" : "Цель ещё не выполнена";
+    status.classList.toggle("is-complete", isComplete);
+    markButton.textContent = isMarkedToday ? "Отменить сегодня" : "Отметить";
+    markButton.classList.toggle("is-marked", isMarkedToday);
+    markButton.dataset.id = habit.id;
+    markButton.setAttribute("aria-pressed", String(isMarkedToday));
+    item.querySelector(".habit-delete-button").dataset.id = habit.id;
+    habitList.append(item);
+  });
+}
+
+function toggleHabitMark(id) {
+  const habit = habits.find((item) => item.id === id);
+  if (!habit) return;
+
+  const today = toLocalDateString(new Date());
+  if (habit.markedDates.includes(today)) {
+    habit.markedDates = habit.markedDates.filter((date) => date !== today);
+  } else {
+    habit.markedDates.push(today);
+  }
+  saveHabits();
+  renderHabits();
+}
+
+function getCurrentWeekRange() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayFromMonday = (today.getDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayFromMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return [toLocalDateString(monday), toLocalDateString(sunday)];
+}
+
+function showHabitNameError(message) {
+  habitNameError.textContent = message;
+  habitNameInput.setAttribute("aria-invalid", String(Boolean(message)));
+}
+
+function showHabitGoalError(message) {
+  habitGoalError.textContent = message;
+  habitGoalInput.setAttribute("aria-invalid", String(Boolean(message)));
 }
 
 function renderMonthlyReport(monthDate) {
@@ -587,4 +721,35 @@ function isValidSavedExpense(expense) {
 
 function saveExpenses() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+}
+
+function loadHabits() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HABITS_STORAGE_KEY));
+    if (!Array.isArray(saved)) return [];
+    return saved.filter(isValidSavedHabit).map((habit) => ({
+      ...habit,
+      name: habit.name.trim(),
+      markedDates: [...new Set(habit.markedDates)],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function isValidSavedHabit(habit) {
+  if (!habit || typeof habit !== "object") return false;
+  if (typeof habit.id !== "string" || habit.id === "") return false;
+  if (typeof habit.name !== "string" || habit.name.trim() === "" || habit.name.trim().length > 40) return false;
+  if (!Number.isInteger(habit.goal) || habit.goal < 1 || habit.goal > 7) return false;
+  if (!Array.isArray(habit.markedDates)) return false;
+  return habit.markedDates.every((date) => {
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+    const parsedDate = new Date(`${date}T00:00:00`);
+    return !Number.isNaN(parsedDate.getTime()) && toLocalDateString(parsedDate) === date;
+  });
+}
+
+function saveHabits() {
+  localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits));
 }

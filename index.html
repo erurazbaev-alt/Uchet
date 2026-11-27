@@ -176,6 +176,35 @@
 
         <div id="expense-list" class="expense-list" aria-live="polite"></div>
       </section>
+
+      <section class="habits-section" aria-labelledby="habits-title">
+        <div class="section-heading">
+          <span class="section-number">03</span>
+          <div>
+            <h2 id="habits-title">Привычки</h2>
+            <p>Цели и отметки на текущую неделю</p>
+          </div>
+        </div>
+
+        <form id="habit-form" class="habit-form">
+          <label class="field">
+            <span>Название привычки</span>
+            <input id="habit-name" type="text" maxlength="40" placeholder="Например, прогулка" aria-describedby="habit-name-error" required />
+            <small id="habit-name-error" class="field-error" role="alert"></small>
+          </label>
+          <label class="field">
+            <span>Цель на неделю</span>
+            <span class="input-with-suffix">
+              <input id="habit-goal" type="number" min="1" max="7" step="1" inputmode="numeric" placeholder="1–7" aria-describedby="habit-goal-error" required />
+              <span>раз</span>
+            </span>
+            <small id="habit-goal-error" class="field-error" role="alert"></small>
+          </label>
+          <button class="habit-add-button" type="submit">Добавить привычку</button>
+        </form>
+
+        <div id="habit-list" class="habit-list" aria-live="polite"></div>
+      </section>
     </main>
 
     <template id="expense-template">
@@ -192,6 +221,22 @@
           </div>
         </div>
         <button class="delete-button" type="button" aria-label="Удалить трату">×</button>
+      </article>
+    </template>
+
+    <template id="habit-template">
+      <article class="habit-item">
+        <div class="habit-details">
+          <div class="habit-title-row">
+            <h3 class="habit-name"></h3>
+            <strong class="habit-progress"></strong>
+          </div>
+          <p class="habit-status"></p>
+        </div>
+        <div class="habit-actions">
+          <button class="habit-mark-button" type="button">Отметить</button>
+          <button class="habit-delete-button" type="button" aria-label="Удалить привычку">×</button>
+        </div>
       </article>
     </template>
 
